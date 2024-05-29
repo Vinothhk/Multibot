@@ -1,103 +1,153 @@
 #! /usr/bin/env python3
-
-# File name: swarm_control.py
-
 import rclpy
+from geometry_msgs.msg import PoseStamped
+from nav2_msgs.action import NavigateToPose
+from rclpy.action import ActionClient
 from rclpy.node import Node
-from geometry_msgs.msg import Twist, PoseStamped,PoseWithCovarianceStamped
-from nav_msgs.msg import Odometry
-import math
 from tf_transformations import euler_from_quaternion
-from geometry_msgs.msg import Quaternion
+import math
+from nav_msgs.msg import Odometry
 
-class SwarmControl(Node):
+class Followtheleader(Node):
     def __init__(self):
-        super().__init__('swarm_control')
-        # Create publisher for robot_2
-        self.publisher_robot2 = self.create_publisher(Twist, '/bot_2/cmd_vel', 10)
-        # Create publisher for robot_3
-        self.publisher_robot3 = self.create_publisher(Twist, '/bot_3/cmd_vel', 10)
-        self.get_logger().info('Publishers are created...')
-        # Create subscriptions for the poses of all robots
-        self.subscription_leader = self.create_subscription(Odometry, 'bot_1/odom', self.leader_pose_callback, 10)
-        self.subscription_robot2 = self.create_subscription(Odometry, 'bot_2/odom', self.robot2_pose_callback, 10)
+        super().__init__('LeaderFollower')
+        self.x1 = 0.0
+        self.y1 = 0.0
+        self.x2 = 0.0
+        self.y2 = 0.0
+        self.x3 = 0.0
+        self.y3 = 0.0 
+        self.yaw1 = 0.0
+        self.yaw2 = 0.0
+        self.yaw3 = 0.0   
+        self._bot_1_action_client = ActionClient(self,NavigateToPose, '/bot_1/navigate_to_pose')
+        self._bot_2_action_client = ActionClient(self, NavigateToPose, '/bot_2/navigate_to_pose')
+        self._bot_3_action_client = ActionClient(self, NavigateToPose, '/bot_3/navigate_to_pose')
+        self.subscription_robot1 = self.create_subscription(Odometry, 'bot_1/odom', self.robot1_pose_callback, 10)
+        self.subscription_robot2 = self.create_subscription(Odometry, 'bot_2/odom', self.robot2_pose_callback, 10)        
         self.subscription_robot3 = self.create_subscription(Odometry, 'bot_3/odom', self.robot3_pose_callback, 10)
-        self.get_logger().info('Subscribers are created...')
-        
-        # Initialize variables
-        self.leader_pose = Odometry()
+        self.robot1_pose = Odometry()
         self.robot2_pose = Odometry()
         self.robot3_pose = Odometry()
-        self.desired_distance = 0.5  # Desired distance between robots
-        
-        self.k_align = 0.3
-        self.k_cohesion = 0.2
-        self.k_separation = 0.5
-        
-        self.get_logger().info('NODE IS ACTIVE ! ...')
-    def leader_pose_callback(self, msg):
-        # Update leader robot's pose
-        self.get_logger().info('Leader Callback...')
-        self.leader_pose = msg
+        self.sub_pose = self.create_subscription(PoseStamped, 'Pose', self.goal_callback,10)
+        self.get_logger().info('Initialized..')
 
-    def robot2_pose_callback(self, msg):
-        # Update robot_2's pose
-        self.get_logger().info('Robot 1 Callback...')
-        self.robot2_pose = msg
-        self.move_robot(self.publisher_robot2, self.robot2_pose,self.leader_pose)
-
-    def robot3_pose_callback(self, msg):
-        self.get_logger().info('Robot 2 Callback...')
-        # Update robot_3's pose
-        self.robot3_pose = msg
-        self.move_robot(self.publisher_robot3, self.robot3_pose,self.robot2_pose)
-        
+    def calc_dist(self,x,y,a,b):
+        dist = math.sqrt(math.pow(x-a,2)+math.pow(y-b,2))
+        return dist
+    
     def get_yaw_from_quaternion(self, orientation):
-        # Convert orientation from Quaternion to Euler
         (roll, pitch, yaw) = euler_from_quaternion([orientation.x, orientation.y, orientation.z, orientation.w])
         return yaw
-
-    def move_robot(self, publisher, robot_pose, other_poses):
-        vel_msg = Twist()
-        self.get_logger().info('Robot is moving...')
-        """ # Alignment
-        align_vel = Twist()
-        align_vel.linear.x += other_poses.pose.pose.position.x
-        align_vel.linear.y += other_poses.pose.pose.position.y
+     
+    def goal_callback(self, msg):
+        p =  msg.pose
+        goal_x = p.position.x
+        goal_y = p.position.y
+        goal_yaw = self.get_yaw_from_quaternion(p.orientation)
+        delta1 = self.calc_dist(goal_x, goal_y, self.x1, self.y1)
+        delta2 = self.calc_dist(goal_x, goal_y, self.x2, self.y2)
+        delta3 = self.calc_dist(goal_x, goal_y, self.x3, self.y3)
+        delta = [delta1,delta2,delta3]
+        index = delta.index(min(delta)) + 1
+        leaderNS = f'bot_{index}'
+        if index==1:
+            self.sendgoal(goal_x,goal_y,goal_yaw,1,0.0)
+            self.sendgoal(goal_x,goal_y,goal_yaw,2,1.0)
+            self.sendgoal(goal_x,goal_y,goal_yaw,3,2.0)
+        elif index==2:
+            self.sendgoal(goal_x,goal_y,goal_yaw,2,0.0)
+            self.sendgoal(goal_x,goal_y,goal_yaw,1,1.0)
+            self.sendgoal(goal_x,goal_y,goal_yaw,3,2.0)
+        elif index==3:
+            self.sendgoal(goal_x,goal_y,goal_yaw,3,0.0)
+            self.sendgoal(goal_x,goal_y,goal_yaw,1,1.0)
+            self.sendgoal(goal_x,goal_y,goal_yaw,2,2.0)
+            
+    def sendgoal(self,a,b,y,i,alpha):
+        if i ==1:
+            x_goal = a - (alpha*math.cos(y))
+            y_goal = b - (alpha*math.sin(y))
+            self.get_logger().info('sending goal to action server 1')
+            goal_pose = NavigateToPose.Goal()
+            goal_pose.pose.header.frame_id = 'map'
+            goal_pose.pose.pose.position.x = x_goal
+            goal_pose.pose.pose.position.y = y_goal
+            goal_pose.pose.pose.orientation.z = y
+            self.get_logger().info('waiting for action server 1')
+            self._bot_1_action_client.wait_for_server()
+            self.get_logger().info('action server 1 detected')
+            self._send_goal_future = self._bot_1_action_client.send_goal_async(goal_pose, feedback_callback=self.feedback_callback)
+            self.get_logger().info('goal sent')
+            self._send_goal_future.add_done_callback(self.goal_response_callback)
+        elif i==2:
+            x_goal = a - (alpha*math.cos(y))
+            y_goal = b - (alpha*math.sin(y))
+            self.get_logger().info('sending goal to action server 2')
+            goal_pose = NavigateToPose.Goal()
+            goal_pose.pose.header.frame_id = 'map'
+            goal_pose.pose.pose.position.x = x_goal
+            goal_pose.pose.pose.position.y = y_goal
+            goal_pose.pose.pose.orientation.z = y
+            self.get_logger().info('waiting for action server 2')
+            self._bot_2_action_client.wait_for_server()
+            self.get_logger().info('action server 2 detected')
+            self._send_goal_future = self._bot_2_action_client.send_goal_async(goal_pose, feedback_callback=self.feedback_callback)
+            self.get_logger().info('goal sent')
+            self._send_goal_future.add_done_callback(self.goal_response_callback)
+        elif i==3:
+            x_goal = a - (alpha*math.cos(y))
+            y_goal = b - (alpha*math.sin(y))
+            self.get_logger().info('sending goal to action server 3')
+            goal_pose = NavigateToPose.Goal()
+            goal_pose.pose.header.frame_id = 'map'
+            goal_pose.pose.pose.position.x = x_goal
+            goal_pose.pose.pose.position.y = y_goal
+            goal_pose.pose.pose.orientation.z = y
+            self.get_logger().info('waiting for action server 3')
+            self._bot_3_action_client.wait_for_server()
+            self.get_logger().info('action server 3 detected')
+            self._send_goal_future = self._bot_3_action_client.send_goal_async(goal_pose, feedback_callback=self.feedback_callback)
+            self.get_logger().info('goal sent')
+            self._send_goal_future.add_done_callback(self.goal_response_callback)
+            
+    def robot1_pose_callback(self,msg):
+        self.x1 = msg.pose.pose.position.x
+        self.y1 = msg.pose.pose.position.y
+        self.yaw1 = self.get_yaw_from_quaternion(msg.pose.pose.orientation)        
+    
+    def robot2_pose_callback(self,msg):
+        self.x2 =  msg.pose.pose.position.x
+        self.y2 = msg.pose.pose.position.y
+        self.yaw2 = self.get_yaw_from_quaternion(msg.pose.pose.orientation)
         
-        # Cohesion
-        cohesion_vel = Twist()
-        cohesion_vel.linear.x += other_poses.pose.pose.position.x
-        cohesion_vel.linear.y += other_poses.pose.pose.position.y
+    def robot3_pose_callback(self,msg):
+        self.x3= msg.pose.pose.position.x
+        self.y3 =msg.pose.pose.position.y    
+        self.yaw3 = self.get_yaw_from_quaternion(msg.pose.pose.orientation)
 
+    def goal_response_callback(self, future):
+        goal_handle = future.result()
+        if not goal_handle.accepted:
+            self.get_logger().info('Goal rejected :(\n')
+            return
+        self.get_logger().info('Goal accepted :)\n')
+        self._get_result_future = goal_handle.get_result_async()
+        self._get_result_future.add_done_callback(self.get_result_callback)
 
-        # Separation
-        separation_vel = Twist() """
-        linear_distance = math.sqrt((other_poses.pose.pose.position.x - robot_pose.pose.pose.position.x) ** 2 + (other_poses.pose.pose.position.y - robot_pose.pose.pose.position.y) ** 2)
-        if linear_distance > self.desired_distance or linear_distance < self.desired_distance:
-            angle_to_leader = math.atan2(other_poses.pose.pose.position.y - robot_pose.pose.pose.position.y, other_poses.pose.pose.position.x - robot_pose.pose.pose.position.x)
-            follower_yaw = self.get_yaw_from_quaternion(other_poses.pose.pose.orientation)
-            angular_difference = angle_to_leader - follower_yaw
-            vel_msg.linear.x = linear_distance
-            vel_msg.angular.z = 2 * angular_difference
-            self.get_logger().info(f" Linear Distance: {linear_distance}, Angular Difference: {angular_difference}")
-        
-            """ # Total velocity
-            msg.linear.x = self.k_align * align_vel.linear.x + self.k_cohesion * cohesion_vel.linear.x + self.k_separation * separation_vel.linear.x
-            msg.angular.z = self.k_align * align_vel.linear.y + self.k_cohesion * cohesion_vel.linear.y + self.k_separation * separation_vel.linear.y """
-        
-            self.get_logger().info('Moving Robot...')
-            publisher.publish(vel_msg)
-        
-        """    self.get_logger().info('Robot pose: %s' % str(robot_pose.pose))
-        self.get_logger().info('Alignment velocity: %s' % str(align_vel))
-        self.get_logger().info('Cohesion velocity: %s' % str(cohesion_vel))
-        self.get_logger().info('Separation velocity: %s' % str(separation_vel))
-        self.get_logger().info('Total velocity: %s' % str(msg)) """
+    def get_result_callback(self, future):
+        result = future.result().result
+        self.get_logger().info('Result:' + str(result)+'\n')
 
+    def feedback_callback(self, feedback_msg):
+        feedback = feedback_msg.feedback
+        self.get_logger().info('FEEDBACK:' + str(feedback)+'\n' )
+
+        
 def main(args=None):
     rclpy.init(args=args)
-    swarm_control = SwarmControl()
+    swarm_control = Followtheleader()
     rclpy.spin(swarm_control)
+    
 if __name__ == '__main__':
     main()
