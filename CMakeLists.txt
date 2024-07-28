@@ -40,7 +40,6 @@ install(
     rviz
     launch
     meshes
-    models
     config
     worlds
     maps
