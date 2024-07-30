@@ -29,7 +29,7 @@ class Followtheleader(Node):
         self.robot1_pose = Odometry()
         self.robot2_pose = Odometry()
         self.robot3_pose = Odometry()
-        self.sub_pose = self.create_subscription(PoseStamped, 'Pose', self.goal_callback,10)
+        self.sub_pose = self.create_subscription(PoseStamped, 'goal_pose', self.goal_callback,10)
         self.get_logger().info('Initialized..')
 
     def calc_dist(self,x,y,a,b):
@@ -51,6 +51,7 @@ class Followtheleader(Node):
         delta = [delta1,delta2,delta3]
         index = delta.index(min(delta)) + 1
         leaderNS = f'bot_{index}'
+        self.get_logger().info(f'bot_{index} is leader')
         if index==1:
             self.sendgoal(goal_x,goal_y,goal_yaw,1,0.0)
             self.sendgoal(goal_x,goal_y,goal_yaw,2,1.0)
@@ -137,11 +138,11 @@ class Followtheleader(Node):
 
     def get_result_callback(self, future):
         result = future.result().result
-        self.get_logger().info('Result:' + str(result)+'\n')
+        #self.get_logger().info('Result:' + str(result)+'\n')
 
     def feedback_callback(self, feedback_msg):
         feedback = feedback_msg.feedback
-        self.get_logger().info('FEEDBACK:' + str(feedback)+'\n' )
+        #self.get_logger().info('FEEDBACK:' + str(feedback)+'\n' )
 
         
 def main(args=None):
