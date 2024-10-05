@@ -1,0 +1,6 @@
+<?xml version='1.0'?>
+<launch>
+    <include file="$(find-pkg-share multibot)/launch/world.launch.py"/>
+    <include file="$(find-pkg-share multibot)/launch/spawn_robots.launch.py"/>
+    <include file="$(find-pkg-share multibot)/launch/square_desc.launch.py"/>
+</launch>

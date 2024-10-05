@@ -20,7 +20,7 @@ def generate_launch_description():
         executable='spawn_entity.py',
         name='spawn_entity',
         output='screen',
-        arguments=['-entity', entity_name_1,'-x', '3.0' , '-y', '0.0', '-z', '0.1',
+        arguments=['-entity', entity_name_1,'-x', '3.0' , '-y', '3.0', '-z', '0.1',
                    '-R', '0.0', '-P', '0.0', '-Y', '-1.57',
                    '-topic', '/bot_1/robot_description'
                    ]
@@ -32,7 +32,7 @@ def generate_launch_description():
         executable='spawn_entity.py',
         name='spawn_entity',
         output='screen',
-        arguments=['-entity', entity_name_2, '-x', '-3.0' , '-y', '0.0', '-z', '0.1',
+        arguments=['-entity', entity_name_2, '-x', '-3.0' , '-y', '-3.0', '-z', '0.1',
                    '-R', '0.0', '-P', '0.0', '-Y', '1.57',
                    '-topic', '/bot_2/robot_description'
                    ]
@@ -43,7 +43,7 @@ def generate_launch_description():
         executable='spawn_entity.py',
         name='spawn_entity',
         output='screen',
-        arguments=['-entity', entity_name_3, '-x', '0.0' , '-y', '3.0', '-z', '0.1',
+        arguments=['-entity', entity_name_3, '-x', '-3.0' , '-y', '3.0', '-z', '0.1',
                    '-R', '0.0', '-P', '0.0', '-Y', '0.0',
                    '-topic', '/bot_3/robot_description'
                    ]
