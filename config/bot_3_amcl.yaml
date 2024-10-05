@@ -43,7 +43,7 @@ bot_3/amcl:
     first_map_only: false
     initial_pose:
       x: 0.0
-      y: 5.0
+      y: 3.0
       z: 0.0
       #x: -0.10
       #y: 0.007
