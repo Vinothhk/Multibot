@@ -29,8 +29,9 @@ if(BUILD_TESTING)
 endif()
 
 install(PROGRAMS
-  patterns/follow_the_leader.py
-  patterns/nav.py
+  patterns/followtheleader.py
+  patterns/circle.py
+  patterns/square.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
