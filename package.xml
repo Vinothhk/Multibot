@@ -24,7 +24,6 @@
   <depend>gazebo_ros2_control</depend>
   <depend>joint_state_broadcaster</depend>
   <depend>joint_trajectory_controller</depend>
-  <depend>velocity_controllers</depend>
   
   <export>
     <build_type>ament_cmake</build_type>
