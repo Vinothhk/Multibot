@@ -42,12 +42,9 @@ bot_3/amcl:
     always_reset_initial_pose: true
     first_map_only: false
     initial_pose:
-      x: 0.0
-      y: 3.0
-      z: 0.0
-      #x: -0.10
-      #y: 0.007
-      #z: 0.004
+      x: -0.03
+      y: 3.02
+      z: 0.004
       yaw: 0.0
 
 bot_3/amcl_map_client:
