@@ -1,0 +1,17 @@
+urdf/bot_4.urdf
+urdf/bot_5.urdf
+urdf/bot_6.urdf
+urdf/bot_7.urdf
+urdf/bot_8.urdf
+
+launch/multirobot*.py
+launch/multirobot*.xml
+launch/square*.py
+
+config/bot_4*
+config/bot_5*
+config/bot_6*
+config/bot_7*
+config/bot_8*
+
+rviz/multirobot*
