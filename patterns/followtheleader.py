@@ -32,7 +32,8 @@ class NavToPoseActionClient(Node):
         goal_pose.pose.header.frame_id = 'map'
         goal_pose.pose.pose.position.x = x_goal
         goal_pose.pose.pose.position.y = y_goal
-        goal_pose.pose.pose.orientation.z = yaw_goal
+        # goal_pose.pose.pose.orientation.z = yaw_goal  
+        goal_pose.pose.pose.orientation = self.leader_pose.pose.pose.orientation    
         self.get_logger().info('waiting for bot 2 action server')
         self._bot_2_action_client.wait_for_server()
         self.get_logger().info('action server for bot 2 detected')
@@ -51,7 +52,8 @@ class NavToPoseActionClient(Node):
         goal_pose.pose.header.frame_id = 'map'
         goal_pose.pose.pose.position.x = x_goal
         goal_pose.pose.pose.position.y = y_goal
-        goal_pose.pose.pose.orientation.z = yaw_goal
+        # goal_pose.pose.pose.orientation.z = yaw_goal
+        goal_pose.pose.pose.orientation = self.robot2_pose.pose.pose.orientation
         self.get_logger().info('waiting for bot 3 action server')
         self._bot_3_action_client.wait_for_server()
         self.get_logger().info('action server for bot 3 detected')
