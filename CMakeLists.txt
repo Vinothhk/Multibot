@@ -30,8 +30,6 @@ endif()
 
 install(PROGRAMS
   patterns/followtheleader.py
-  patterns/circle.py
-  patterns/square.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
