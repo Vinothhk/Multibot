@@ -8,7 +8,7 @@ import math
 from nav_msgs.msg import Odometry
 class NavToPoseActionClient(Node):
     def __init__(self):
-        super().__init__('Nav_To_Pose_Action_Client')
+        super().__init__('Coordinator_Node')
         self._bot_2_action_client = ActionClient(self, NavigateToPose, '/bot_2/navigate_to_pose')
         self._bot_3_action_client = ActionClient(self, NavigateToPose, '/bot_3/navigate_to_pose')
         self.subscription_leader = self.create_subscription(Odometry, 'bot_1/odom', self.leader_pose_callback, 10)
@@ -33,9 +33,9 @@ class NavToPoseActionClient(Node):
         goal_pose.pose.pose.position.x = x_goal
         goal_pose.pose.pose.position.y = y_goal
         goal_pose.pose.pose.orientation.z = yaw_goal
-        self.get_logger().info('waiting for action server')
+        self.get_logger().info('waiting for bot 2 action server')
         self._bot_2_action_client.wait_for_server()
-        self.get_logger().info('action server detected')
+        self.get_logger().info('action server for bot 2 detected')
         self._send_goal_future = self._bot_2_action_client.send_goal_async(goal_pose, feedback_callback=self.feedback_callback)
         self.get_logger().info('goal sent')
         self._send_goal_future.add_done_callback(self.goal_response_callback)
@@ -52,9 +52,9 @@ class NavToPoseActionClient(Node):
         goal_pose.pose.pose.position.x = x_goal
         goal_pose.pose.pose.position.y = y_goal
         goal_pose.pose.pose.orientation.z = yaw_goal
-        self.get_logger().info('waiting for action server')
+        self.get_logger().info('waiting for bot 3 action server')
         self._bot_3_action_client.wait_for_server()
-        self.get_logger().info('action server detected')
+        self.get_logger().info('action server for bot 3 detected')
         self._send_goal_future = self._bot_3_action_client.send_goal_async(goal_pose, feedback_callback=self.feedback_callback)
         self.get_logger().info('goal sent')
         self._send_goal_future.add_done_callback(self.goal_response_callback)
@@ -70,11 +70,11 @@ class NavToPoseActionClient(Node):
 
     def get_result_callback(self, future):
         result = future.result().result
-        self.get_logger().info('Result:' + str(result))
+        # self.get_logger().info('Result:' + str(result))
 
     def feedback_callback(self, feedback_msg):
         feedback = feedback_msg.feedback
-        self.get_logger().info('FEEDBACK:' + str(feedback) )
+        # self.get_logger().info('FEEDBACK:' + str(feedback) )
 
         
 def main(args=None):

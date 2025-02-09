@@ -35,3 +35,6 @@ ros2 launch teleop_twist_joy teleop-launch.py joy_vel:='/bot_1/cmd_vel'
 ```
 ros2 run teleop_twist_keyboard teleop_twist_keyboard
 ```
+
+### DEMO
+https://github.com/Vinothhk/Multibot/blob/main/img/leader_follower.gif
