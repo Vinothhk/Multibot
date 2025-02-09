@@ -6,7 +6,6 @@ urdf/bot_8.urdf
 
 launch/multirobot*.py
 launch/multirobot*.xml
-launch/square*.py
 
 config/bot_4*
 config/bot_5*
