@@ -16,17 +16,18 @@ class NavToPoseActionClient(Node):
         self.leader_pose = Odometry()
         self.robot2_pose = Odometry()
         self.robot3_pose = Odometry()
-        
+        self.distance_gap = 1.1 #distance to maintain between robot
         
     def get_yaw_from_quaternion(self, orientation):
         (roll, pitch, yaw) = euler_from_quaternion([orientation.x, orientation.y, orientation.z, orientation.w])
         return yaw 
+    
     def leader_pose_callback(self, msg):
         self.leader_pose=msg
         yaw_goal = self.get_yaw_from_quaternion(self.leader_pose.pose.pose.orientation)
-        x_goal = self.leader_pose.pose.pose.position.x - (1.1*math.cos(yaw_goal))
-        y_goal = self.leader_pose.pose.pose.position.y - (1.1*math.sin(yaw_goal))
-        self.get_logger().info('sending goal to action server')
+        x_goal = self.leader_pose.pose.pose.position.x - (self.distance_gap*math.cos(yaw_goal))
+        y_goal = self.leader_pose.pose.pose.position.y - (self.distance_gap*math.sin(yaw_goal))
+        self.get_logger().info('sending goal to bot 2 action server')
         goal_pose = NavigateToPose.Goal()
         goal_pose.pose.header.frame_id = 'map'
         goal_pose.pose.pose.position.x = x_goal
@@ -42,10 +43,10 @@ class NavToPoseActionClient(Node):
     def robot2_pose_callback(self,msg):
         self.robot2_pose=msg
         yaw_goal = self.get_yaw_from_quaternion(self.robot2_pose.pose.pose.orientation)
-        x_goal = self.robot2_pose.pose.pose.position.x - (1.1*math.cos(yaw_goal))
-        y_goal = self.robot2_pose.pose.pose.position.y - (1.1*math.sin(yaw_goal))
+        x_goal = self.robot2_pose.pose.pose.position.x - (self.distance_gap*math.cos(yaw_goal))
+        y_goal = self.robot2_pose.pose.pose.position.y - (self.distance_gap*math.sin(yaw_goal))
         
-        self.get_logger().info('sending goal to action server')
+        self.get_logger().info('sending goal to bot 3 action server')
         goal_pose = NavigateToPose.Goal()
         goal_pose.pose.header.frame_id = 'map'
         goal_pose.pose.pose.position.x = x_goal

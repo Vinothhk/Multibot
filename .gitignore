@@ -14,3 +14,5 @@ config/bot_7*
 config/bot_8*
 
 rviz/multirobot*
+
+README_x.md
